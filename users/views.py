@@ -3,6 +3,10 @@ from django.views.generic.edit import FormView
 from django.core.mail import send_mail
 from django.contrib.auth import login
 from .forms import CustomUserCreationForm
+from rest_framework import filters, generics
+from .models import Payment
+from .serializers import PaymentSerializer
+
 
 class RegisterView(FormView):
     template_name = 'register.html'
@@ -21,3 +25,11 @@ class RegisterView(FormView):
         from_email = 'your_email@yandex.ru'
         recipient_list = [user_email]
         send_mail(subject, message, from_email, recipient_list)
+
+
+class PaymentListAPIView(generics.ListAPIView):
+    serializer_class = PaymentSerializer
+    queryset = Payment.objects.all()
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['course', 'lesson', 'payment_way']
+    ordering_fields = ['pay_date']
