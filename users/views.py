@@ -3,10 +3,15 @@ from django.views.generic.edit import FormView
 from django.core.mail import send_mail
 from django.contrib.auth import login
 from .forms import CustomUserCreationForm
-from rest_framework import filters, generics
+from rest_framework import filters, generics, viewsets
 from django_filters.rest_framework import DjangoFilterBackend
-from .models import Payment
-from .serializers import PaymentSerializer
+from .models import Payment, User
+from .serializers import PaymentSerializer, UserSerializer
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    serializer_class = UserSerializer
+    queryset = User.objects.all()
 
 
 class RegisterView(FormView):
