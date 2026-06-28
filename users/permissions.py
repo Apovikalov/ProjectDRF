@@ -1,6 +1,5 @@
-from django.contrib.auth.models import Permission
-from rest_framework import generics
-from rest_framework.permissions import IsAuthenticated
+from django.contrib.auth.models import Group, Permission
+from rest_framework import generics, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from groups import moderator_group
@@ -15,8 +14,13 @@ can_view_lesson_permission = Permission.objects.get(codename='Can view Урок'
 can_delete_lesson_permission = Permission.objects.get(codename='Can delete Урок')
 
 
+class IsOwner(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return obj.owner == request.user
+
+
 class MyView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsOwner]
 
     def get(self, request):
         return Response({'status': 'request was permitted'})
@@ -37,8 +41,28 @@ def get_permissions(self):
 
 
 class ChangeLessonListAPIView(generics.ListAPIView):
-    permission_classes = [IsAuthenticated, can_change_lesson_permission]
+    permission_classes = [permissions.IsAuthenticated, can_change_lesson_permission]
 
 
 class ViewLessonListAPIView(generics.ListAPIView):
-    permission_classes = [IsAuthenticated, can_view_lesson_permission]
+    permission_classes = [permissions.IsAuthenticated, can_view_lesson_permission]
+
+
+class GroupCanEditOrReadOnly(permissions.BasePermission):
+    message = "Модераторам разрешены только редактирование и просмотр."
+
+    def has_permission(self, request, view) -> bool:
+
+        if not request.user.is_authenticated:
+            return False
+
+        group = Group.objects.get(name='Moderators')
+        return group in request.user.groups.all()
+
+    def has_object_permission(self, request, view, obj) -> bool:
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        else:
+            if obj.owner == request.user:
+                return True
+            return False
