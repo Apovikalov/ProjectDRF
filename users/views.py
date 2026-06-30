@@ -1,12 +1,15 @@
+from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic.edit import FormView
 from django.core.mail import send_mail
 from django.contrib.auth import login
 from .forms import CustomUserCreationForm
-from rest_framework import filters, generics, viewsets
+from rest_framework import filters, generics, permissions, response, views, viewsets
 from django_filters.rest_framework import DjangoFilterBackend
-from .models import Payment, User
+from .models import Payment, Subscription, User
 from .serializers import PaymentSerializer, UserSerializer
+
+from materials.models import Course
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -40,3 +43,22 @@ class PaymentListAPIView(generics.ListAPIView):
     search_fields = ['user', 'pay_date']
     ordering_fields = ['pay_date']
     filterset_fields = ['course', 'lesson', 'payment_way']
+
+
+class SubscriptionManagementView(views.APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        course_id = request.data.get('course_id')
+
+        course_item = get_object_or_404(Course, id=course_id)
+
+        subscription, created = Subscription.objects.get_or_create(user=user, course=course_item)
+        if not created:
+            subscription.delete()
+            message = "Подписка удалена"
+        else:
+            message = "Подписка добавлена"
+
+        return response.Response({"message": message})

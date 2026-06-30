@@ -20,8 +20,10 @@ class User(AbstractUser):
 class Payment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payment', verbose_name='Пользователь')
     pay_date = models.DateField(verbose_name='Дата оплаты')
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, blank=True, null=True, related_name='payment', verbose_name='Курс')
-    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, blank=True, null=True, related_name='payment', verbose_name='Урок')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, blank=True, null=True, related_name='payment',
+                               verbose_name='Курс')
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, blank=True, null=True, related_name='payment',
+                               verbose_name='Урок')
     pay_sum = models.FloatField(verbose_name='Сумма оплаты')
     payment_way = models.CharField(max_length=30, verbose_name='Способ оплаты')
 
@@ -32,3 +34,16 @@ class Payment(models.Model):
         verbose_name = 'Платёж'
         verbose_name_plural = 'Платежи'
         ordering = ['pay_date']
+
+
+class Subscription(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='subscription', verbose_name='Пользователь')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='subscription', verbose_name='Курс')
+
+    def __str__(self):
+        return f'{self.user}, {self.course}'
+
+    class Meta:
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
+        ordering = ['user']
