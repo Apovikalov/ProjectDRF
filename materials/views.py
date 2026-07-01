@@ -1,12 +1,14 @@
 from rest_framework import viewsets, generics
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated
 
 from materials.models import Course, Lesson
 from materials.serializers import CourseSerializer, LessonSerializer
+from users.permissions import GroupCanEditOrReadOnly, IsOwner
 
 
 class CourseViewSet(viewsets.ModelViewSet):
     serializer_class = CourseSerializer
+    permission_classes = [IsAuthenticated, GroupCanEditOrReadOnly, IsOwner]
     queryset = Course.objects.all()
 
     def perform_create(self, serializer):
@@ -16,12 +18,12 @@ class CourseViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action in ['list', 'update', 'retrieve', 'partial_update']:
-            return [IsAuthenticated(), IsAdminUser()]
+            return [IsAuthenticated(), GroupCanEditOrReadOnly()]
 
 
 class LessonCreateAPIView(generics.CreateAPIView):
     serializer_class = LessonSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, GroupCanEditOrReadOnly, IsOwner]
 
     def perform_create(self, serializer):
         new_lesson = serializer.save()

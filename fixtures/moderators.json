@@ -1,31 +1,30 @@
 [
-    {
-        "model": "auth.Group",
-        "pk": 1,
-        "name": "Moderators"
-    },
-    {
-        "model": "auth.Permission",
-        "pk": 1,
-        "codename": "view_course",
-        "name": "Can view Course"
-    },
-    {
-        "model": "auth.Permission",
-        "pk": 2,
-        "codename": "change_course",
-        "name": "Can change Course"
-    },
-    {
-        "model": "auth.Permission",
-        "pk": 3,
-        "codename": "view_lesson",
-        "name": "Can view Lesson"
-    },
-    {
-        "model": "auth.Permission",
-        "pk": 4,
-        "codename": "change_lesson",
-        "name": "Can change Lesson"
-    }
+{
+  "model": "auth.group",
+  "fields": {
+    "name": "Moderators",
+    "permissions": [
+      [
+        "change_course",
+        "materials",
+        "course"
+      ],
+      [
+        "view_course",
+        "materials",
+        "course"
+      ],
+      [
+        "change_lesson",
+        "materials",
+        "lesson"
+      ],
+      [
+        "view_lesson",
+        "materials",
+        "lesson"
+      ]
+    ]
+  }
+}
 ]
