@@ -1,3 +1,4 @@
+from django.contrib.auth.models import AnonymousUser
 from rest_framework import viewsets, generics
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
@@ -15,8 +16,9 @@ class CourseViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         new_course = serializer.save()
-        new_course.owner = self.request.user
-        new_course.save()
+        if self.request.user == AnonymousUser:
+            new_course.owner = None
+        new_course.owner = serializer.save()
 
     def get_permissions(self):
         if self.action in ['list', 'update', 'retrieve', 'partial_update']:
