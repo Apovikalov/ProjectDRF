@@ -1,5 +1,5 @@
 from rest_framework import viewsets, generics
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
 
 from materials.models import Course, Lesson
@@ -10,7 +10,7 @@ from users.permissions import GroupCanEditOrReadOnly, IsOwner
 
 class CourseViewSet(viewsets.ModelViewSet):
     serializer_class = CourseSerializer
-    permission_classes = [IsAuthenticated, GroupCanEditOrReadOnly, IsOwner]
+    permission_classes = [AllowAny]
     queryset = Course.objects.all()
 
     def perform_create(self, serializer):
@@ -21,6 +21,8 @@ class CourseViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ['list', 'update', 'retrieve', 'partial_update']:
             return [IsAuthenticated(), GroupCanEditOrReadOnly()]
+        else:
+            return [AllowAny()]
 
 
 class LessonCreateAPIView(generics.CreateAPIView):
