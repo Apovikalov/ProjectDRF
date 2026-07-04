@@ -15,10 +15,8 @@ class CourseViewSet(viewsets.ModelViewSet):
     queryset = Course.objects.all()
 
     def perform_create(self, serializer):
-        new_course = serializer.save()
-        if self.request.user == AnonymousUser:
-            new_course.owner = None
-        new_course.owner = serializer.save()
+        user = self.request.user if self.request.user.is_authenticated else None
+        serializer.save(owner=user)
 
     def get_permissions(self):
         if self.action in ['list', 'update', 'retrieve', 'partial_update']:
@@ -29,16 +27,16 @@ class CourseViewSet(viewsets.ModelViewSet):
 
 class LessonCreateAPIView(generics.CreateAPIView):
     serializer_class = LessonSerializer
-    permission_classes = [IsAuthenticated, GroupCanEditOrReadOnly, IsOwner]
+    permission_classes = [AllowAny]
 
     def perform_create(self, serializer):
-        new_lesson = serializer.save()
-        new_lesson.owner = self.request.user
-        new_lesson.save()
+        user = self.request.user if self.request.user.is_authenticated else None
+        serializer.save(owner=user)
 
 
 class LessonListAPIView(generics.ListAPIView):
     serializer_class = LessonSerializer
+    permission_classes = [AllowAny]
     queryset = Lesson.objects.all()
 
 

@@ -7,7 +7,7 @@ from config import settings
 class Course(models.Model):
     name = models.CharField(max_length=30, verbose_name='Название')
     description = models.TextField(verbose_name='Описание')
-    image = models.ImageField(upload_to='images/', verbose_name='Изображение')
+    image = models.ImageField(upload_to='images/', verbose_name='Изображение', null=True, blank=True)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
@@ -22,7 +22,7 @@ class Course(models.Model):
 class Lesson(models.Model):
     name = models.CharField(max_length=30, verbose_name='Название')
     description = models.TextField(verbose_name='Описание')
-    image = models.ImageField(upload_to='images/', verbose_name='Изображение')
+    image = models.ImageField(upload_to='images/', verbose_name='Изображение', null=True, blank=True)
     video = models.FileField(
         upload_to='videos/',
         null=True,
