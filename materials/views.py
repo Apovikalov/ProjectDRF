@@ -1,9 +1,11 @@
 from django.contrib.auth.models import AnonymousUser
-from rest_framework import viewsets, generics
+from django.shortcuts import get_object_or_404
+from rest_framework import viewsets, generics, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from materials.models import Course, Lesson
+from materials.models import Course, Lesson, CourseSubscription
 from materials.pagination import MyPagination
 from materials.serializers import CourseSerializer, LessonSerializer
 from users.permissions import GroupCanEditOrReadOnly, IsOwner
@@ -72,3 +74,22 @@ class LessonPaginationView(APIView):
         paginated_queryset = self.paginate_queryset(queryset)
         serializer = LessonSerializer(paginated_queryset, many=True)
         return self.get_paginated_response(serializer.data)
+
+
+class SubscriptionAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, *args, **kwargs):
+        user = self.request.user
+        course_id = self.request.data.get("course_id")
+        if not course_id:
+            return Response({"error": "course_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+        course_item = get_object_or_404(Course, id=course_id)
+        subs_item = CourseSubscription.objects.filter(user=user, course=course_item)
+        if subs_item.exists():
+            subs_item.delete()
+            message = "подписка удалена"
+        else:
+            CourseSubscription.objects.create(user=user, course=course_item)
+            message = "подписка добавлена"
+        return Response({"message": message}, status=status.HTTP_200_OK)

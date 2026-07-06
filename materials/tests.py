@@ -1,8 +1,9 @@
+from django.urls.base import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 from django.core.files.uploadedfile import SimpleUploadedFile
 
-from materials.models import Course, Lesson
+from materials.models import Course, Lesson, CourseSubscription
 from users.models import User
 
 image_file = SimpleUploadedFile(
@@ -57,7 +58,7 @@ class MaterialTestCase(APITestCase):
         self.assertEqual(
             response.json(),
             {'id': 2, 'name': 'Lesson 1', 'description': 'Print in C#',
-             'course': 1, 'image': None, 'owner': self.user.id}
+             'course': 1, 'image': None}
         )
 
         self.assertTrue(
@@ -65,15 +66,72 @@ class MaterialTestCase(APITestCase):
         )
 
 
-    def test_list_course(self):
-        """Тест вывода списка курсов"""
-        response = self.client.get(
-            '/courses/'
-        )
+    def test_list_lesson(self):
+        """Тестирование просмотра уроков"""
 
-        print(response.json())
+        response = self.client.get(
+            '/lessons/'
+        )
 
         self.assertEqual(
             response.status_code,
             status.HTTP_200_OK
         )
+
+        self.assertEqual(
+            response.json(),
+            [{'id': 1, 'name': 'Lesson 1', 'description': 'Print in C#',
+             'course': 1, 'image': None}]
+        )
+
+
+    def test_lesson_update(self):
+        """Тестирование обновления уроков"""
+        lesson_dict = {"name": "Python introduction"}
+
+        response = self.client.patch('/lessons/update/<int:pk>/', lesson_dict)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(response.json(), "Python introduction")
+
+
+    def test_lesson_delete(self):
+        """Тестирование удаления уроков"""
+        response = self.client.delete(
+            '/lessons/delete/<int:pk>/'
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Lesson.objects.all().count(), 0)
+
+
+class SubscriptionAPITestCase(APITestCase):
+    """Тестирование функционала подписок на курсы."""
+
+    def setUp(self):
+        """Подготовка данных для тестов."""
+        self.user = User.objects.create(email="test@mail.ru")
+        self.course = Course.objects.create(name="python", owner=self.user)
+        # Авторизуем пользователя
+        self.client.force_authenticate(user=self.user)
+
+    def test_subscribe_to_course(self):
+        """Тестирование добавления подписки."""
+        data = {"course_id": self.course.id}
+        response = self.client.post('course/subscribe/', data=data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()["message"], "подписка добавлена")
+        self.assertTrue(CourseSubscription.objects.filter(user=self.user, course=self.course).exists())
+
+    def test_unsubscribe_from_course(self):
+        """Тестирование удаления подписки (toggle)."""
+
+        # Сначала создаем подписку
+        CourseSubscription.objects.create(user=self.user, course=self.course)
+        data = {"course_id": self.course.pk}
+        response = self.client.post('course/subscribe/', data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()["message"], "подписка удалена")
+        self.assertFalse(CourseSubscription.objects.filter(user=self.user, course=self.course).exists())
