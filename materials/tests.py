@@ -34,7 +34,6 @@ class MaterialTestCase(APITestCase):
         )
         self.user.save()
 
-
     def test_create_lesson(self):
         """Тест создания урока"""
         data = {
@@ -65,7 +64,6 @@ class MaterialTestCase(APITestCase):
             Lesson.objects.all().exists()
         )
 
-
     def test_list_lesson(self):
         """Тестирование просмотра уроков"""
 
@@ -81,27 +79,33 @@ class MaterialTestCase(APITestCase):
         self.assertEqual(
             response.json(),
             [{'id': 1, 'name': 'Lesson 1', 'description': 'Print in C#',
-             'course': 1, 'image': None}]
+              'course': 1, 'image': None}]
         )
-
 
     def test_lesson_update(self):
         """Тестирование обновления уроков"""
         lesson_dict = {"name": "Python introduction"}
 
-        response = self.client.patch('/lessons/update/<int:pk>/', lesson_dict)
+        response = self.client.patch('/lessons/update/1/', lesson_dict)
+
+        print(response.json())
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        self.assertEqual(response.json(), "Python introduction")
-
+        self.assertEqual(response.json(),
+                         {'id': 1, 'name': 'Python introduction', 'description': 'Print in C#',
+                          'course': 1, 'image': None})
 
     def test_lesson_delete(self):
         """Тестирование удаления уроков"""
         response = self.client.delete(
-            '/lessons/delete/<int:pk>/'
+            '/lessons/delete/1/'
         )
+
+        print(response.json())
+
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
         self.assertEqual(Lesson.objects.all().count(), 0)
 
 
