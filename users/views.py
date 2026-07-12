@@ -5,9 +5,11 @@ from django.core.mail import send_mail
 from django.contrib.auth import login
 from .forms import CustomUserCreationForm
 from rest_framework import filters, generics, permissions, response, views, viewsets
+from rest_framework.exceptions import ValidationError
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Payment, Subscription, User
 from .serializers import PaymentSerializer, UserSerializer
+from .services import create_stripe_product, create_stripe_price, create_stripe_session
 
 from materials.models import Course
 
@@ -43,6 +45,23 @@ class PaymentListAPIView(generics.ListAPIView):
     search_fields = ['user', 'pay_date']
     ordering_fields = ['pay_date']
     filterset_fields = ['course', 'lesson', 'payment_way']
+
+    def perform_create(self, serializer):
+        payment = serializer.save(user=self.request.user)
+        if payment.course is None and payment.lesson is None:
+            raise ValidationError("Нужно выбрать курс или урок")
+        elif payment.course and payment.lesson:
+            raise ValidationError("Нужно выбрать либо курс, либо урок")
+        else:
+            if payment.course:
+                product = create_stripe_product(payment.course)
+            else:
+                product = create_stripe_product(payment.lesson)
+        price = create_stripe_price(stripe_product=product, amount=payment.amount)
+        session_id, session_url = create_stripe_session(price)
+        payment.session_id = session_id
+        payment.link = session_url
+        payment.save()
 
 
 class SubscriptionManagementView(views.APIView):

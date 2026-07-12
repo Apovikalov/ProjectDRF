@@ -1,5 +1,7 @@
 from django.contrib.auth.models import AnonymousUser
 from django.shortcuts import get_object_or_404
+from django.utils.decorators import method_decorator
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets, generics, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
@@ -9,6 +11,11 @@ from materials.models import Course, Lesson, CourseSubscription
 from materials.pagination import MyPagination, MaterialPaginator
 from materials.serializers import CourseSerializer, LessonSerializer
 from users.permissions import GroupCanEditOrReadOnly, IsOwner
+
+
+@method_decorator(name='list', decorator=swagger_auto_schema(
+    operation_description="description from swagger_auto_schema via method_decorator"
+))
 
 
 class CourseViewSet(viewsets.ModelViewSet):
