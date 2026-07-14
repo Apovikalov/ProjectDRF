@@ -9,6 +9,8 @@ class Course(models.Model):
     description = models.TextField(verbose_name='Описание')
     image = models.ImageField(upload_to='images/', verbose_name='Изображение', null=True, blank=True)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
+    subscriptions = models.ManyToManyField(settings.AUTH_USER_MODEL, null=True, blank=True, verbose_name='Подписки',
+                                           related_name='user_subscriptions')
 
     def __str__(self):
         return f'{self.name}'

@@ -6,6 +6,7 @@ from rest_framework import viewsets, generics, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.decorators import action
 
 from materials.models import Course, Lesson, CourseSubscription
 from materials.pagination import MyPagination, MaterialPaginator
@@ -33,6 +34,11 @@ class CourseViewSet(viewsets.ModelViewSet):
             return [IsAuthenticated(), GroupCanEditOrReadOnly()]
         else:
             return [AllowAny()]
+
+    @action(detail=True, methods=("post",))
+    def subscriptions(self, pk):
+        course = get_object_or_404(Course, pk=pk)
+        # if course.subscriptions.
 
 
 class LessonCreateAPIView(generics.CreateAPIView):
