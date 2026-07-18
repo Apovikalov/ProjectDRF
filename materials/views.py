@@ -11,6 +11,7 @@ from rest_framework.decorators import action
 from materials.models import Course, Lesson, CourseSubscription
 from materials.pagination import MyPagination, MaterialPaginator
 from materials.serializers import CourseSerializer, LessonSerializer
+from materials.tasks import send_email_for_update_course
 from users.permissions import GroupCanEditOrReadOnly, IsOwner
 
 
@@ -29,16 +30,16 @@ class CourseViewSet(viewsets.ModelViewSet):
         user = self.request.user if self.request.user.is_authenticated else None
         serializer.save(owner=user)
 
+    def perform_update(self, serializer):
+        course = serializer.save()
+        course_id = course.id
+        send_email_for_update_course.delay(course_id)
+
     def get_permissions(self):
         if self.action in ['list', 'update', 'retrieve', 'partial_update']:
             return [IsAuthenticated(), GroupCanEditOrReadOnly()]
         else:
             return [AllowAny()]
-
-    @action(detail=True, methods=("post",))
-    def subscriptions(self, pk):
-        course = get_object_or_404(Course, pk=pk)
-        # if course.subscriptions.
 
 
 class LessonCreateAPIView(generics.CreateAPIView):
