@@ -15,8 +15,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 ENV SECRET_KEY = "your_secret_key"
-ENV CELERY_BROKER_URL="redis://localhost:6379/0"
-ENV CELERY_BACKEND="redis://localhost:6379/1"
+ENV CELERY_BROKER_URL="redis://redis:6379/0"
+ENV CELERY_BACKEND="redis://redis:6379/1"
 
 RUN mkdir -p /app/media
 
