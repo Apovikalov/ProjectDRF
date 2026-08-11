@@ -1,0 +1,30 @@
+[
+{
+  "model": "auth.group",
+  "fields": {
+    "name": "Moderators",
+    "permissions": [
+      [
+        "change_course",
+        "materials",
+        "course"
+      ],
+      [
+        "view_course",
+        "materials",
+        "course"
+      ],
+      [
+        "change_lesson",
+        "materials",
+        "lesson"
+      ],
+      [
+        "view_lesson",
+        "materials",
+        "lesson"
+      ]
+    ]
+  }
+}
+]
