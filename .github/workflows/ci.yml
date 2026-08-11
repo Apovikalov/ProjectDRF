@@ -28,15 +28,42 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: Run migrations
+    - name: Run migrate
+      env:
+        NAME: library_db
+        USER: postgres
+        PASSWORD: postgres
+        HOST: localhost
       run: python manage.py migrate
 
     - name: Run tests
+      env:
+        NAME: library_db
+        USER: postgres
+        PASSWORD: postgres
+        HOST: localhost
       run: python manage.py test
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Log in in Docker hub
+        run: echo ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }} | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
+
+      - name: Build Docker image
+        run: docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }} .
+
+      - name: Push Docker image to Docker Hub
+        run: docker push ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
 
   deploy:
     runs-on: ubuntu-latest
-    needs: test
+    needs: build
 
     steps:
     - name: Set up SSH
@@ -78,3 +105,20 @@ jobs:
         ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
           sudo systemctl restart myapp.service
         EOF 
+
+  postgres-job:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: mydatabase
+    steps:
+      - name: Run script that connects to PostgreSQL
+        env:
+          POSTGRES_HOST: db
+          POSTGRES_PORT: 5432
+        run: node client.js
